@@ -1,0 +1,19 @@
+<p>form works!</p>
+<form method="post">
+    <br>
+      <h1> Sube tu libro</h1>
+    
+      <input class="txt" type="text" [(ngModel)]="formApps.title" name="title" placeholder="Nombre">
+      <br><br>
+    
+      <input class="txt" type="text" [(ngModel)]="formApps.description" name="description" placeholder="Date">
+      <br><br>
+      <input class="txt" type="number" [(ngModel)]="formApps.price" name="price" placeholder="Date">
+      <br><br>
+    
+
+      <input class="txt" type="text" [(ngModel)]="formApps.image" name="image" placeholder="image">
+      <br>
+      <button (click)="crearEscudo()"> Crear Escudo </button>
+    
+        </form>

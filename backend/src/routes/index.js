@@ -1,0 +1,114 @@
+const { Router } = require('express');
+const router = Router();
+
+const User = require('../models/User');
+const Book = require('../models/Book');
+
+const jwt = require('jsonwebtoken');
+
+router.get('/', (req, res) => {
+    res.send('hello')
+});
+
+router.post('/signup', async (req, res) => {
+    const { email, password } = req.body;
+    const newUser = new User({email, password});
+    await newUser.save();
+		const token = await jwt.sign({_id: newUser._id}, 'secretkey');
+    res.status(200).json({token});
+});
+
+router.post('/signin', async (req, res) => {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({email});
+    if (!user) return res.status(401).send('The email doen\' exists');
+    if (user.password !== password) return res.status(401).send('Wrong Password');
+
+		const token = jwt.sign({_id: user._id}, 'secretkey');
+
+    return res.status(200).json({token});
+});
+
+router.get('/tasks', (req, res) => {
+    res.json([
+        {
+            _id: '1',
+            name: "task one",
+            description: 'asdadasd',
+            date: "2019-11-06T15:50:18.921Z"
+        },
+        {
+            _id: '2',
+            name: "task two",
+            description: 'asdadasd',
+            date: "2019-11-06T15:50:18.921Z"
+        },
+        {
+            _id: '3',
+            name: "task three",
+            description: 'asdadasd',
+            date: "2019-11-06T15:50:18.921Z"
+        },
+    ])
+});
+
+
+router.get('/books', verifyToken, (req, res) => {
+    Book.find()
+    .then(resp => res.json(resp))
+    .catch(err => res.json(err))
+});
+
+router.post('/books',verifyToken, (req, res) =>{
+ 
+    const {title, description, price, image} = req.body;
+    
+    
+    Book.create({title, description, price, image})
+    .then(resp => res.json(resp))
+    .catch(err => res.json(err))
+    });
+
+    router.get("/books/:id",(req, res, next) => {
+        Book.findById(req.params.id).then( book =>{
+          res.status(200).json(book);
+        })
+        .catch( err => res.status(500).json({message:err,error:true}) );
+      });
+
+    router.delete('/books/:id', verifyToken,(req, res) => {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+          res.status(400).json({ message: 'Specified id is not valid' });
+          return;
+        }
+      
+        Book.findByIdAndRemove(req.params.id)
+        .then(res => res.json({message: `Project with ${req.params.id} is removed successfully. `}))
+        .catch(err => res.json(err))
+        });
+    
+
+async function verifyToken(req, res, next) {
+	try {
+		if (!req.headers.authorization) {
+			return res.status(401).send('Unauhtorized Request');
+		}
+		let token = req.headers.authorization.split(' ')[1];
+		if (token === 'null') {
+			return res.status(401).send('Unauhtorized Request');
+		}
+
+		const payload = await jwt.verify(token, 'secretkey');
+		if (!payload) {
+			return res.status(401).send('Unauhtorized Request');
+		}
+		req.userId = payload._id;
+		next();
+	} catch(e) {
+		//console.log(e)
+		return res.status(401).send('Unauhtorized Request');
+	}
+}
+
+module.exports = router;
